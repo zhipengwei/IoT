@@ -5,16 +5,16 @@
 #define EXPERIMENT_CONFIG_PACKET_SIZE 10 // This is the parameters of the distribution of packet size
 #define EXPERIMENT_CONFIG_INTERVAL    10 // This is the parameters of the distribution of packet interval
 
-#define NUMBER_OF_TERMINALS 3000;
+#define NUMBER_OF_TERMINALS 300;
 // Sender data rate
 #define EXPERIMENT_SENDER_ONTIME_CONSTANT 1
 #define EXPERIMENT_SENDER_DOWNTIME_LAMBDA 1
 
 // sender link, data rate is bps; delay is in mili seconds;
-#define EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE 100000000
+#define EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE 1000000
 #define EXPERIMENT_CONFIG_SENDER_LINK_DELAY 10000
 
 // server link
-#define EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE 133000000
+#define EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE 13300000
 #define EXPERIMENT_CONFIG_SERVER_LINK_DELAY 100000
 

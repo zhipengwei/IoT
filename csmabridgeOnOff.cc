@@ -13,7 +13,7 @@
 
 #include "ns3/flow-monitor-helper.h"
 
-#include "/home/wzp/workspace/ns-allinone-3.26/ns-3.26/scratch/config.h"
+#include "/home/wzp/workspace/ns-allinone-3.26/ns-3.26/scratch/configOnOff.h"
 #include <vector>
 
 using namespace ns3;
@@ -167,6 +167,19 @@ AsciiPacketsInQueue (std::string path, uint32_t oldValue, uint32_t newValue)
  // *os << path << " " << *packet << std::endl;
 }
 
+const string ConvertToStringValue (int val, string name) {
+	string tmp;
+	if (name.compare (string("constant")) == 0) {
+		tmp.assign("ns3::ConstantRandomVariable[Constant=");
+	}
+	else {
+		tmp.assign("ns3::ExponentialRandomVariable[Mean=");
+	}
+	tmp.append(to_string(val));
+	tmp.append("]");
+	return tmp;
+}
+
 int 
 main (int argc, char *argv[])
 {
@@ -189,7 +202,7 @@ main (int argc, char *argv[])
   // Explicitly create the nodes required by the topology (shown above).
   //
 
-  int numberOfTerminals = 50;
+  int numberOfTerminals = NUMBER_OF_TERMINALS;
   NS_LOG_INFO ("Create nodes.");
   NodeContainer terminals;
   terminals.Create (numberOfTerminals);
@@ -204,14 +217,14 @@ main (int argc, char *argv[])
 
   NS_LOG_INFO ("Build Topology");
   CsmaHelper csma;
-  csma.SetChannelAttribute ("DataRate", DataRateValue (5000000));
-  csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
+  csma.SetChannelAttribute ("DataRate", DataRateValue (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE));
+  csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (EXPERIMENT_CONFIG_SENDER_LINK_DELAY)));
 
   CsmaHelper csmaServer;
   // UintegerValue, holds an unsigned integer type.
   csmaServer.SetQueue("ns3::DropTailQueue", "MaxBytes", UintegerValue(EXPERIMENT_CONFIG_BUFFER_SIZE_BYTES), "Mode", EnumValue (DropTailQueue::QUEUE_MODE_BYTES));
-  csmaServer.SetChannelAttribute ("DataRate", DataRateValue (50000));
-  csmaServer.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
+  csmaServer.SetChannelAttribute ("DataRate", DataRateValue (EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE));
+  csmaServer.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (EXPERIMENT_CONFIG_SERVER_LINK_DELAY)));
 
   // Create the csma links, from each terminal to the switch
   NetDeviceContainer terminalDevices;
@@ -266,7 +279,7 @@ main (int argc, char *argv[])
   // We've got the "hardware" in place.  Now we need to add IP addresses.
   NS_LOG_INFO ("Assign IP Addresses.");
   Ipv4AddressHelper ipv4;
-  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
+  ipv4.SetBase ("10.1.32.0", "255.255.224.0");
   ipv4.Assign (terminalDevices);
   ipv4.Assign (serverDevices);
 
@@ -300,8 +313,9 @@ main (int argc, char *argv[])
    //vector<Ptr<OnOffApplication> > ApplicationVector(numberOfTerminals);
 // Create OnOff applications to send TCP to the hub, one on each spoke node.
    OnOffHelper onOffHelper ("ns3::TcpSocketFactory", Address ());
-   onOffHelper.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
-   onOffHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
+   onOffHelper.SetAttribute ("OnTime", StringValue (ConvertToStringValue(EXPERIMENT_SENDER_ONTIME_CONSTANT, "constant")));
+   onOffHelper.SetAttribute ("OffTime", StringValue (ConvertToStringValue(EXPERIMENT_SENDER_ONTIME_CONSTANT, "exponential")));
+   onOffHelper.SetConstantRate (DataRate (160000));
 
    for(uint32_t i=0; i<terminals.GetN (); ++i)
    {
@@ -337,15 +351,15 @@ main (int argc, char *argv[])
   //
   // Now, do the actual simulation.
   //
-  Ptr<FlowMonitor> flowMonitor;
-  FlowMonitorHelper flowHelper;
-  flowMonitor = flowHelper.InstallAll();
+//  Ptr<FlowMonitor> flowMonitor;
+//  FlowMonitorHelper flowHelper;
+//  flowMonitor = flowHelper.InstallAll();
 
 
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Run ();
 
-  flowMonitor->SerializeToXmlFile("NameOfFile", true, true);
+//  flowMonitor->SerializeToXmlFile("NameOfFile", true, true);
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
