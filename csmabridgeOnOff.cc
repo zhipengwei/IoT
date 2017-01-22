@@ -353,13 +353,14 @@ main (int argc, char *argv[])
   //
 //  Ptr<FlowMonitor> flowMonitor;
 //  FlowMonitorHelper flowHelper;
-//  flowMonitor = flowHelper.InstallAll();
+//  //flowMonitor = flowHelper.InstallAll();
+//  flowMonitor = flowHelper.Install(servers.Get (0));
 
 
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Run ();
 
-//  flowMonitor->SerializeToXmlFile("NameOfFile", true, true);
+//  flowMonitor->SerializeToXmlFile("NameOfFile", false, false);
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
