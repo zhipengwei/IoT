@@ -5,10 +5,13 @@ do
 	do
 		for linkCapacity in 100 150 200	
 		do
-			cat $1 | tr "NUMBER_OF_TERMINALS 300" "NUMBER_OF_TERMINALS $numberOfNodes" | tr "EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE 13300000" "EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE $linkCapacity" | tr "EXPERIMENT_SENDER_DOWNTIME_LAMBDA 1" "EXPERIMENT_SENDER_DOWNTIME_LAMBDA $lambda" > configOnOff.h
+			cat $1 | tr "NUMBER_OF_TERMINALS 300" "NUMBER_OF_TERMINALS $numberOfNodes" | tr "EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE 13300000" "EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE $linkCapacity" | tr "EXPERIMENT_SENDER_DOWNTIME_LAMBDA 1" "EXPERIMENT_SENDER_DOWNTIME_LAMBDA $lambda" > configOnOff.h 
+			echo " " >> csmabridgeOnOff.cc
 			cd ..
 			./waf 
-			./waf --run csmaBridgeOnOff 2>&1 | cat > tmp_${numberOfNodes}_${lambda}_${linkCapacity}
+			echo "Compilation finished!"
+			./waf --run csmabridgeOnOff 2>&1 | cat > tmp_${numberOfNodes}_${lambda}_${linkCapacity} 
+			cd scratch
 
 		done
 	done

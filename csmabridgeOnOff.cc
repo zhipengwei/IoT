@@ -292,8 +292,8 @@ main (int argc, char *argv[])
    Address sinkLocalAddress (InetSocketAddress (serverIpv4.GetAddress(0), port));
    PacketSinkHelper sinkHelper ("ns3::TcpSocketFactory", sinkLocalAddress);
    ApplicationContainer sinkApp = sinkHelper.Install (servers.Get (0));
-   sinkApp.Start (Seconds (1.0));
-   sinkApp.Stop (Seconds (10.0));
+   sinkApp.Start (Seconds (EXPERIMENT_CONFIG_START_TIME));
+   sinkApp.Stop (Seconds (EXPERIMENT_CONFIG_STOP_TIME));
 
    //normally wouldn't need a loop here but the server IP address is different
    //on each p2p subnet
@@ -351,16 +351,53 @@ main (int argc, char *argv[])
   //
   // Now, do the actual simulation.
   //
-//  Ptr<FlowMonitor> flowMonitor;
-//  FlowMonitorHelper flowHelper;
-//  //flowMonitor = flowHelper.InstallAll();
-//  flowMonitor = flowHelper.Install(servers.Get (0));
+  Ptr<FlowMonitor> flowMonitor;
+  FlowMonitorHelper flowHelper;
+  //flowMonitor = flowHelper.InstallAll();
+  flowMonitor = flowHelper.Install(servers.Get (0));
 
 
   NS_LOG_INFO ("Run Simulation.");
   Simulator::Run ();
 
-//  flowMonitor->SerializeToXmlFile("NameOfFile", false, false);
+  flowMonitor->SerializeToXmlFile("NameOfFile", false, false);
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

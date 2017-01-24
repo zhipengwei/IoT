@@ -117,12 +117,12 @@ MyApp::SendPacket (void)
   m_socket->Send (packet);
   m_numberPacketsPerFlowCnt++;
 
+  // The 
   //if (++m_packetsSent < m_nPackets)
-  //  {
-  //    ScheduleTx ();
-  //  }
-  // In this way, the sender will keep sending until the simulation finishes.
-  ScheduleTx ();
+  if (m_running)
+    {
+      ScheduleTx ();
+    }
 }
 
 void 
@@ -144,7 +144,7 @@ MyApp::ScheduleTx (void)
       // Time is used to denote delay until the next event should execute.
       m_sendEvent = Simulator::Schedule (tNext, &MyApp::SendPacket, this);
     }
-    cout << "couter " << m_numberPacketsPerFlowCnt << endl;
+    cout << "couter " << m_numberPacketsPerFlowCnt << " " << m_running << endl;
 }
 
 //static void
