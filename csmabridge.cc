@@ -27,7 +27,7 @@ public:
   MyApp ();
   virtual ~MyApp();
 
-  void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate);
+  void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate, uint32_t numberPacketsPerFlow, double mean, double bound);
 
 private:
   virtual void StartApplication (void);
@@ -45,6 +45,8 @@ private:
   bool            m_running;
   uint32_t        m_packetsSent;
 
+  uint32_t 	  m_numberPacketsPerFlow;
+  uint32_t        m_numberPacketsPerFlowCnt;
   Ptr<ExponentialRandomVariable> x;
 };
 
@@ -59,6 +61,7 @@ MyApp::MyApp ()
     m_packetsSent (0)
 {
 	x = CreateObject<ExponentialRandomVariable> ();
+        m_numberPacketsPerFlowCnt = 0;
 }
 
 MyApp::~MyApp()
@@ -67,7 +70,7 @@ MyApp::~MyApp()
 }
 
 void
-MyApp::Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate)
+MyApp::Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate, uint32_t numberPacketsPerFlow, double mean, double bound)
 {
   m_socket = socket;
   m_peer = address;
@@ -75,8 +78,10 @@ MyApp::Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t
   m_nPackets = nPackets;
   m_dataRate = dataRate;
 
-  x->SetAttribute ("Mean", DoubleValue (1000.0));
-  x->SetAttribute ("Bound", DoubleValue(10000.0));
+  x->SetAttribute ("Mean", DoubleValue (mean));
+  x->SetAttribute ("Bound", DoubleValue(bound));
+
+  m_numberPacketsPerFlow = numberPacketsPerFlow;
 }
 
 void
@@ -110,23 +115,36 @@ MyApp::SendPacket (void)
 {
   Ptr<Packet> packet = Create<Packet> (m_packetSize);
   m_socket->Send (packet);
+  m_numberPacketsPerFlowCnt++;
 
-  if (++m_packetsSent < m_nPackets)
-    {
-      ScheduleTx ();
-    }
+  //if (++m_packetsSent < m_nPackets)
+  //  {
+  //    ScheduleTx ();
+  //  }
+  // In this way, the sender will keep sending until the simulation finishes.
+  ScheduleTx ();
 }
 
 void 
 MyApp::ScheduleTx (void)
 {
+
+  // After a certain number of packets are sent, an interval is inserted.
   if (m_running)
     {
-      //Time tNext (Seconds (m_packetSize * 8 / static_cast<double> (m_dataRate.GetBitRate ())));
-      Time tNext (x->GetValue());
+      Time tNext; 
+      if (m_numberPacketsPerFlowCnt == (m_numberPacketsPerFlow - 1)) {
+      	tNext = Seconds (m_packetSize * 8 / static_cast<double> (m_dataRate.GetBitRate ()) + x->GetValue() + x->GetValue());
+	m_numberPacketsPerFlowCnt = 0;
+      }
+      else {
+      	tNext = Seconds (m_packetSize * 8 / static_cast<double> (m_dataRate.GetBitRate ()));
+	m_numberPacketsPerFlowCnt++;
+      }
       // Time is used to denote delay until the next event should execute.
       m_sendEvent = Simulator::Schedule (tNext, &MyApp::SendPacket, this);
     }
+    cout << "couter " << m_numberPacketsPerFlowCnt << endl;
 }
 
 //static void
@@ -196,7 +214,7 @@ main (int argc, char *argv[])
   // Explicitly create the nodes required by the topology (shown above).
   //
 
-  int numberOfTerminals = 50;
+  int numberOfTerminals = NUMBER_OF_TERMINALS;
   NS_LOG_INFO ("Create nodes.");
   NodeContainer terminals;
   terminals.Create (numberOfTerminals);
@@ -211,14 +229,14 @@ main (int argc, char *argv[])
 
   NS_LOG_INFO ("Build Topology");
   CsmaHelper csma;
-  csma.SetChannelAttribute ("DataRate", DataRateValue (5000000));
-  csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
+  csma.SetChannelAttribute ("DataRate", DataRateValue (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE));
+  csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (EXPERIMENT_CONFIG_SENDER_LINK_DELAY)));
 
   CsmaHelper csmaServer;
   // UintegerValue, holds an unsigned integer type.
   csmaServer.SetQueue("ns3::DropTailQueue", "MaxBytes", UintegerValue(EXPERIMENT_CONFIG_BUFFER_SIZE_BYTES), "Mode", EnumValue (DropTailQueue::QUEUE_MODE_BYTES));
-  csmaServer.SetChannelAttribute ("DataRate", DataRateValue (50000));
-  csmaServer.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
+  csmaServer.SetChannelAttribute ("DataRate", DataRateValue (EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE));
+  csmaServer.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (EXPERIMENT_CONFIG_SERVER_LINK_DELAY)));
 
   // Create the csma links, from each terminal to the switch
   NetDeviceContainer terminalDevices;
@@ -308,11 +326,12 @@ main (int argc, char *argv[])
    for(uint32_t i=0; i<terminals.GetN (); ++i)
    {
       Address sinkAddress
-         (InetSocketAddress (serverIpv4.GetAddress (0), port));
+         (InetSocketAddress (serverIpv4.GetAddress (0), port)); 
 
       ApplicationVector[i] = CreateObject<MyApp> ();
       // void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate);
-      ApplicationVector[i]->Setup (SocketVector[i], sinkAddress, 1040, 1000, DataRate ("1Mbps"));
+      // number of packets is not used here.
+      ApplicationVector[i]->Setup (SocketVector[i], sinkAddress, EXPERIMENT_SENDER_PACKET_SIZE, 1000, DataRate (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE_STRING), EXPERIMENT_SENDER_PACKETS_PER_SHORT_FLOW, EXPERIMENT_SENDER_DOWNTIME_MEAN, EXPERIMENT_SENDER_DOWNTIME_BOUND);
       terminals.Get (i)->AddApplication (ApplicationVector[i]);
    }
    clientApps.Start (Seconds (EXPERIMENT_CONFIG_START_TIME));
@@ -345,3 +364,7 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
+
+
+
+
