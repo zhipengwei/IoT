@@ -144,8 +144,8 @@ MyApp::ScheduleTx (void)
       // Time is used to denote delay until the next event should execute.
       m_sendEvent = Simulator::Schedule (tNext, &MyApp::SendPacket, this);
     }
-    cout << "couter " << m_numberPacketsPerFlowCnt << " " << m_running << endl;
-    cout << "start time " << m_startTime << " " << m_stopTime << endl;
+   // cout << "couter " << m_numberPacketsPerFlowCnt << " " << m_running << endl;
+   // cout << "start time " << m_startTime << " " << m_stopTime << endl;
 }
 
 //static void
@@ -171,7 +171,7 @@ CwndChange (std::string context, uint32_t oldCwnd, uint32_t newCwnd)
 static void 
 AsciiDropEvent (std::string path, Ptr<const Packet> packet)
 {
-  NS_LOG_UNCOND ("PacketDrop:\t" << Simulator::Now ().GetSeconds () << "\t" << *packet);
+  NS_LOG_UNCOND ("PacketDrop:\t" << Simulator::Now ().GetSeconds () << "\t" << path << "\t" << *packet);
 //  cout << "aaa" << endl;
 //  *os << "d " << Simulator::Now ().GetSeconds () << " ";
 //  *os << path << " " << *packet << std::endl;
@@ -292,7 +292,7 @@ main (int argc, char *argv[])
   // We've got the "hardware" in place.  Now we need to add IP addresses.
   NS_LOG_INFO ("Assign IP Addresses.");
   Ipv4AddressHelper ipv4;
-  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
+  ipv4.SetBase ("10.1.32.0", "255.255.224.0");
   ipv4.Assign (terminalDevices);
   ipv4.Assign (serverDevices);
 
@@ -305,8 +305,8 @@ main (int argc, char *argv[])
    Address sinkLocalAddress (InetSocketAddress (serverIpv4.GetAddress(0), port));
    PacketSinkHelper sinkHelper ("ns3::TcpSocketFactory", sinkLocalAddress);
    ApplicationContainer sinkApp = sinkHelper.Install (servers.Get (0));
-   sinkApp.Start (Seconds (1.0));
-   sinkApp.Stop (Seconds (10.0));
+   sinkApp.Start (Seconds (EXPERIMENT_CONFIG_START_TIME));
+   sinkApp.Stop (Seconds (EXPERIMENT_CONFIG_STOP_TIME));
 
    //normally wouldn't need a loop here but the server IP address is different
    //on each p2p subnet
@@ -332,7 +332,9 @@ main (int argc, char *argv[])
       ApplicationVector[i] = CreateObject<MyApp> ();
       // void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate);
       // number of packets is not used here.
-      ApplicationVector[i]->Setup (SocketVector[i], sinkAddress, EXPERIMENT_SENDER_PACKET_SIZE, 1000, DataRate (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE_STRING), EXPERIMENT_SENDER_PACKETS_PER_SHORT_FLOW, EXPERIMENT_SENDER_DOWNTIME_MEAN, EXPERIMENT_SENDER_DOWNTIME_BOUND);
+
+      // construct a string to denote the rate
+      ApplicationVector[i]->Setup (SocketVector[i], sinkAddress, EXPERIMENT_SENDER_PACKET_SIZE, 1000, DataRate (std::to_string (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE).append("b/s")), EXPERIMENT_SENDER_PACKETS_PER_SHORT_FLOW, EXPERIMENT_SENDER_DOWNTIME_MEAN, EXPERIMENT_SENDER_DOWNTIME_BOUND);
       terminals.Get (i)->AddApplication (ApplicationVector[i]);
       clientApps.Add (ApplicationVector[i]);
    }
@@ -346,8 +348,8 @@ main (int argc, char *argv[])
   // Configure tracing of all enqueue, dequeue, and NetDevice receive events.
   // Trace output will be sent to the file "csma-bridge.tr"
   //
-  AsciiTraceHelper ascii;
-  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-bridge.tr"));
+//  AsciiTraceHelper ascii;
+//  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-bridge.tr"));
 
   //
   // Also configure some tcpdump traces; each interface will be traced.
@@ -356,7 +358,7 @@ main (int argc, char *argv[])
   // and can be read by the "tcpdump -r" command (use "-tt" option to
   // display timestamps correctly)
   //
-  csma.EnablePcapAll ("csma-bridge", false);
+//  csma.EnablePcapAll ("csma-bridge", false);
 
   //
   // Now, do the actual simulation.
@@ -366,6 +368,32 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   NS_LOG_INFO ("Done.");
 }
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+
+
+
 
 
 
