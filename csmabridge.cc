@@ -145,6 +145,7 @@ MyApp::ScheduleTx (void)
       m_sendEvent = Simulator::Schedule (tNext, &MyApp::SendPacket, this);
     }
     cout << "couter " << m_numberPacketsPerFlowCnt << " " << m_running << endl;
+    cout << "start time " << m_startTime << " " << m_stopTime << endl;
 }
 
 //static void
@@ -333,6 +334,7 @@ main (int argc, char *argv[])
       // number of packets is not used here.
       ApplicationVector[i]->Setup (SocketVector[i], sinkAddress, EXPERIMENT_SENDER_PACKET_SIZE, 1000, DataRate (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE_STRING), EXPERIMENT_SENDER_PACKETS_PER_SHORT_FLOW, EXPERIMENT_SENDER_DOWNTIME_MEAN, EXPERIMENT_SENDER_DOWNTIME_BOUND);
       terminals.Get (i)->AddApplication (ApplicationVector[i]);
+      clientApps.Add (ApplicationVector[i]);
    }
    clientApps.Start (Seconds (EXPERIMENT_CONFIG_START_TIME));
    clientApps.Stop (Seconds (EXPERIMENT_CONFIG_STOP_TIME));
