@@ -229,13 +229,16 @@ main (int argc, char *argv[])
   csmaSwitch.Create (1);
 
   NS_LOG_INFO ("Build Topology");
+  // The terminal link
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", DataRateValue (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE));
   csma.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (EXPERIMENT_CONFIG_SENDER_LINK_DELAY)));
+  csma.SetQueue("ns3::DropTailQueue", "MaxBytes", UintegerValue(EXPERIMENT_CONFIG_INPUT_BUFFER_SIZE_BYTES), "Mode", EnumValue (DropTailQueue::QUEUE_MODE_BYTES));
 
+  // The server link
   CsmaHelper csmaServer;
   // UintegerValue, holds an unsigned integer type.
-  csmaServer.SetQueue("ns3::DropTailQueue", "MaxBytes", UintegerValue(EXPERIMENT_CONFIG_BUFFER_SIZE_BYTES), "Mode", EnumValue (DropTailQueue::QUEUE_MODE_BYTES));
+  csmaServer.SetQueue("ns3::DropTailQueue", "MaxBytes", UintegerValue(EXPERIMENT_CONFIG_OUTPUT_BUFFER_SIZE_BYTES), "Mode", EnumValue (DropTailQueue::QUEUE_MODE_BYTES));
   csmaServer.SetChannelAttribute ("DataRate", DataRateValue (EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE));
   csmaServer.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (EXPERIMENT_CONFIG_SERVER_LINK_DELAY)));
 
@@ -334,7 +337,7 @@ main (int argc, char *argv[])
       // number of packets is not used here.
 
       // construct a string to denote the rate
-      ApplicationVector[i]->Setup (SocketVector[i], sinkAddress, EXPERIMENT_SENDER_PACKET_SIZE, 1000, DataRate (std::to_string (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE).append("b/s")), EXPERIMENT_SENDER_PACKETS_PER_SHORT_FLOW, EXPERIMENT_SENDER_DOWNTIME_MEAN, EXPERIMENT_SENDER_DOWNTIME_BOUND);
+      ApplicationVector[i]->Setup (SocketVector[i], sinkAddress, EXPERIMENT_CONFIG_SENDER_PACKET_SIZE, 1000, DataRate (std::to_string (EXPERIMENT_CONFIG_SENDER_LINK_DATA_RATE).append("b/s")), EXPERIMENT_CONFIG_SENDER_PACKETS_PER_SHORT_FLOW, EXPERIMENT_CONFIG_SENDER_DOWNTIME_MEAN, EXPERIMENT_CONFIG_SENDER_DOWNTIME_BOUND);
       terminals.Get (i)->AddApplication (ApplicationVector[i]);
       clientApps.Add (ApplicationVector[i]);
    }
@@ -348,8 +351,8 @@ main (int argc, char *argv[])
   // Configure tracing of all enqueue, dequeue, and NetDevice receive events.
   // Trace output will be sent to the file "csma-bridge.tr"
   //
-//  AsciiTraceHelper ascii;
-//  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-bridge.tr"));
+  AsciiTraceHelper ascii;
+  csma.EnableAsciiAll (ascii.CreateFileStream ("csma-bridge.tr"));
 
   //
   // Also configure some tcpdump traces; each interface will be traced.
@@ -358,7 +361,7 @@ main (int argc, char *argv[])
   // and can be read by the "tcpdump -r" command (use "-tt" option to
   // display timestamps correctly)
   //
-//  csma.EnablePcapAll ("csma-bridge", false);
+  csma.EnablePcapAll ("csma-bridge", false);
 
   //
   // Now, do the actual simulation.
@@ -398,3 +401,36 @@ main (int argc, char *argv[])
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

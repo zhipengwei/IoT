@@ -1,15 +1,21 @@
-packets_per_flow=10
+set -x
+trap read debug
+packets_per_flow=20
 
 rm -rf ../traces
 mkdir ../traces
 
-for numberOfNodes in 100 200 300
+for numberOfNodes in 300
 do
-	for lambda in 1 2 5 10
+	for lambda in 0.1
 	do
-		for linkCapacity in 100 150 200	
+		for linkCapacity in 100000000
 		do
-			cat $1 | tr "NUMBER_OF_TERMINALS 300" "NUMBER_OF_TERMINALS $numberOfNodes" | tr "EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE 133000000" "EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE $linkCapacity" | tr "EXPERIMENT_SENDER_DOWNTIME_MEAN 1" "EXPERIMENT_SENDER_DOWNTIME_MEAN $lambda" | tr "EXPERIMENT_SENDER_PACKETS_PER_SHORT_FLOW 10" "EXPERIMENT_SENDER_PACKETS_PER_SHORT_FLOW $packets_per_flow"> config.h 
+			cat $1 > config.h
+			echo "#define NUMBER_OF_TERMINALS $numberOfNodes" >> config.h
+			echo "#define EXPERIMENT_CONFIG_SERVER_LINK_DATA_RATE $linkCapacity" >> config.h
+			echo "#define EXPERIMENT_CONFIG_SENDER_DOWNTIME_MEAN $lambda" >> config.h
+		        echo "#define EXPERIMENT_CONFIG_SENDER_PACKETS_PER_SHORT_FLOW $packets_per_flow" >> config.h
 			echo " " >> csmabridge.cc
 			cd ..
 			./waf 
